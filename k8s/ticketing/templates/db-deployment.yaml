@@ -1,0 +1,95 @@
+{{- if .Values.HA }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ticket-db
+spec:
+  serviceName: ticket-db
+  replicas: {{ .Values.replicaCount.db | default 1 }}
+  selector:
+    matchLabels:
+      app: ticket-db
+  template:
+    metadata:
+      labels:
+        app: ticket-db
+    spec:
+      containers:
+      - name: postgres
+        image: {{ .Values.image.db.repository }}:{{ .Values.image.db.tag }}
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: ticket-db-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ticket-db-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: ticket-db-secret
+              key: POSTGRES_DB
+
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: db-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{ .Values.volume.db_data.size }}
+{{- else }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticket-db
+  template:
+    metadata:
+      labels:
+        app: ticket-db
+    spec:
+      containers:
+      - name: postgres
+        image: {{ .Values.image.db.repository }}:{{ .Values.image.db.tag }}
+        env:
+        - name: POSTGRES_USER
+          value: {{ .Values.env.db.POSTGRES_USER }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.env.db.POSTGRES_PASSWORD }}
+        - name: POSTGRES_DB
+          value: {{ .Values.env.db.POSTGRES_DB }}
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: db-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.volume.db_data.size }}
+{{- end }}

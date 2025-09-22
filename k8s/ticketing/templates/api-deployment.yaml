@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-api
+spec:
+  replicas: {{ if .Values.HA }}{{ .Values.replicaCount.api | default 2 }}{{ else }}1{{ end }}
+  selector:
+    matchLabels:
+      app: ticket-api
+  template:
+    metadata:
+      labels:
+        app: ticket-api
+      annotations:                         # <-- Add Prometheus scrape annotations here
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+    spec:
+      {{- if .Values.HA }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - ticket-api
+              topologyKey: "kubernetes.io/hostname"
+      {{- end }}
+      containers:
+      - name: ticket-api
+        image: {{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}
+        env:
+        - name: DB_PATH
+          value: {{ .Values.env.api.DB_PATH }}
+        ports:
+        - containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 5
+          timeoutSeconds: 2
+        livenessProbe:                         # <-- Add liveness probe here
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10

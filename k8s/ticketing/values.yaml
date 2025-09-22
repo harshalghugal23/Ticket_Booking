@@ -1,0 +1,51 @@
+# HA flag: false -> single-node, true -> multi-node HA
+HA: false
+
+replicaCount:
+  api: 2
+  ui: 2
+  db: 1
+
+image:
+  api:
+    repository: ticket-api
+    tag: latest
+  ui:
+    repository: ticket-ui
+    tag: latest
+  db:
+    repository: postgres
+    tag: "15"
+
+service:
+  api:
+    type: ClusterIP
+    port: 5000
+  ui:
+    type: NodePort
+    port: 7860
+  db:
+    type: ClusterIP
+    port: 5432
+
+env:
+  db:
+    POSTGRES_USER: ticket_user
+    POSTGRES_PASSWORD: ticket_pass
+    POSTGRES_DB: bookings
+  api:
+    DB_PATH: postgresql://ticket_user:ticket_pass@ticket-db:5432/bookings
+  ui:
+    API_URL: http://ticket-api:5000
+
+volume:
+  db_data:
+    size: 1Gi
+
+
+hpa:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 5
+    cpuUtilization: 50
