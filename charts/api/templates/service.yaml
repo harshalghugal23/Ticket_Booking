@@ -7,6 +7,7 @@ spec:
     app: ticket-api
   ports:
     - protocol: TCP
-      port: {{ .Values.service.api.port }}
-      targetPort: 5000
-  type: {{ .Values.service.api.type }}
+      port: {{ .Values.service.api.port | default 5000 }}
+      targetPort: {{ .Values.service.api.targetPort | default 5000 }}
+  type: {{ .Values.service.api.type | default "ClusterIP" }}
+
