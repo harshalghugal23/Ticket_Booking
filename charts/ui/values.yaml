@@ -1,0 +1,11 @@
+image:
+  repository: registry.gitlab.com/your-namespace/ticketing/ui
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 7860
+
+env:
+  API_URL: http://ticket-api:5000

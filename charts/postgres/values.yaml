@@ -1,0 +1,14 @@
+postgres:
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: 15
+    pullPolicy: IfNotPresent
+  user: ticket_user
+  password: ticket_pass
+  db: bookings
+  service:
+    port: 5432
+    type: ClusterIP
+  storage:
+    size: 1Gi

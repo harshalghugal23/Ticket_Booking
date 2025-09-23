@@ -1,0 +1,6 @@
+dbVersion: v2
+name: ticket-db
+description: Simple Postgres Deployment for Ticketing System
+type: application
+version: 0.1.0
+appVersion: "15"

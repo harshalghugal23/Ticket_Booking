@@ -1,0 +1,6 @@
+uiVersion: v2
+name: ticket-ui
+description: Ticket Booking ui
+type: application
+version: 0.1.0
+appVersion: "1.0"
